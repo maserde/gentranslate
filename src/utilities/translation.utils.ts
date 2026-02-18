@@ -37,7 +37,7 @@ Domain context:
 Translation rules:
 1. PRESERVE placeholders exactly as-is: {value}, {type}, {0}, {1}, etc. — do not translate content inside curly braces
 2. TRANSLATE all descriptive English terms including offer types, conditions, and UI labels
-3. Only keep in English: proper brand names (Apple, Samsung), model numbers (iPhone 15), and code identifiers
+3. Only keep in English: proper brand names (Apple, Samsung), integration brand names (BackMarket, ShareASale, Tremendous, DataFeed), model numbers (iPhone 15), and code identifiers
 4. Output ONLY a valid JSON object — no markdown, no explanation, no extra text
 
 Domain glossary (MUST be translated, not kept in English):
@@ -47,6 +47,8 @@ Domain glossary (MUST be translated, not kept in English):
 - "Easy Offer" → simple/quick offer (e.g., Indonesian: "penawaran mudah")
 - "Trade-in" → exchange old item for value (translate to local equivalent)
 - "Offer" → proposal/bid (translate appropriately)
+- "Markup"/"Mark Up" → increase in price (e.g., Indonesian: "Naikan Harga")
+- "Mark Down"/"Mark Down" → decrease in price (e.g., Indonesian: "Turunkan Harga")
 
 Example of CORRECT vs INCORRECT translation (e.g. Indonesian):
 - WRONG: "In-Store Offer" → "Penawaran In-Store" (kept English term)
@@ -68,20 +70,22 @@ Input:\n`
 
     private async sendLLMRequest(
         systemPrompt: string,
-        userPrompt: string
+        userPrompt: string,
+        keys: string[]
     ): Promise<Record<string, string>> {
+        const properties = Object.fromEntries(keys.map((k) => [k, { type: 'string' }]))
         const response = await this.llmClient.chat.send({
             chatGenerationParams: {
                 model: 'google/gemini-2.0-flash-001',
                 messages: [
-                    {role: 'system', content: systemPrompt},
-                    {role: 'user', content: userPrompt}
+                    { role: 'user', content: `${systemPrompt}\n${userPrompt}` }
                 ],
                 stream: false,
                 responseFormat: {
                     type: 'json_schema',
                     jsonSchema: {
-                        name: 'translation_output',
+                        name: 'translations',
+                        strict: true,
                         schema: {
                             type: 'object',
                             additionalProperties: {type: 'string'}
@@ -120,7 +124,7 @@ Input:\n`
         const formattedInput = this.generateTranslationFormattedInput(translations)
         const systemPrompt = this.generateSystemPrompt(this.language.name)
         const userPrompt = this.generateUserPrompt(formattedInput)
-        const result = await this.sendLLMRequest(systemPrompt, userPrompt)
+        const result = await this.sendLLMRequest(systemPrompt, userPrompt, Object.keys(translations).map(String))
         if (!result) {
             this.logger.log(
                 'ERROR',
@@ -128,10 +132,7 @@ Input:\n`
             )
             return undefined
         }
-        for (const [key, value] of Object.entries(result)) {
-            translations[Number(key)].value = value
-        }
-        return translations
+        return translations.map((t, i) => new TranslationKeyValue(t.key, result[String(i)] ?? t.value))
     }
 
     public async translate(

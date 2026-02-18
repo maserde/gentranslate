@@ -80,6 +80,7 @@ const translatePatch = async (
 			)
 			await Promise.all(queue)
 			progressPercentage = Math.round((queue.length / translations.length) * 100)
+			queue = []
 		}
 
 		queue.push(
