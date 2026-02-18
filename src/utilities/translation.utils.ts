@@ -88,7 +88,9 @@ Input:\n`
                         strict: true,
                         schema: {
                             type: 'object',
-                            additionalProperties: {type: 'string'}
+                            properties,
+                            required: keys,
+                            additionalProperties: false
                         }
                     }
                 }
