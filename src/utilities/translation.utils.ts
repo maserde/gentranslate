@@ -77,7 +77,6 @@ Input:\n`
                     {role: 'system', content: systemPrompt},
                     {role: 'user', content: userPrompt}
                 ],
-                temperature: 0.2,
                 stream: false,
                 responseFormat: {
                     type: 'json_schema',
