@@ -204,9 +204,17 @@ export class TranslationJson {
         }
     }
 
+    private isFlat(): boolean {
+        return Object.values(this.json).every((v) => typeof v === 'string')
+    }
+
     public setValue(key: string, value: string): TranslationJson {
-        const keys = key.split('.')
-        this.setJsonValue(this.json, keys, value)
+        if (this.isFlat()) {
+            this.json[key] = value
+        } else {
+            const keys = key.split('.')
+            this.setJsonValue(this.json, keys, value)
+        }
         return this
     }
 
@@ -232,6 +240,10 @@ export class TranslationJson {
     }
 
     public getValue(key: string): TranslationKeyValue {
+        if (this.isFlat()) {
+            const value = typeof this.json[key] === 'string' ? (this.json[key] as string) : ''
+            return new TranslationKeyValue(key, value)
+        }
         const keys = key.split('.')
         const value = this.getJsonValue(this.json, keys)
         return new TranslationKeyValue(key, value ?? '')
