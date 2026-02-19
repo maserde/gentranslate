@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { patchTranslations } from '@/tools/translation.tools'
 
 import { program } from 'commander'
