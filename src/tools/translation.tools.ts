@@ -48,10 +48,10 @@ const translatePatch = async (
 	diff: TranslationKeyValue[],
 	options: { batchSize: number } = { batchSize: 10 }
 ) => {
-    const { batchSize = 10 } = options
+	const { batchSize = 10 } = options
 	const translationDiffKeys = diff.map((d) => d.key).join(', ')
 	let queue: Promise<any>[] = []
-    let progressPercentage = 0
+	let completed = 0
 
 	for (const translation of translations) {
 		const language = getLanguageCodeByTranslationJson(translation)
@@ -73,13 +73,16 @@ const translatePatch = async (
 		)
 
 		if (queue.length % batchSize === 0 && queue.length > 0) {
-            logger.log('INFO', `Translation progress: ${progressPercentage}%`)
+			completed += queue.length
+			const progressPercentage = Math.round(
+				(completed / translations.length) * 100
+			)
+			logger.log('INFO', `Translation progress: ${progressPercentage}%`)
 			logger.log(
 				'INFO',
 				`Waiting for ${queue.length} tasks to complete before proceeding`
 			)
 			await Promise.all(queue)
-			progressPercentage = Math.round((queue.length / translations.length) * 100)
 			queue = []
 		}
 
