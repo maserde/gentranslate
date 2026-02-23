@@ -154,9 +154,14 @@ Input:\n`
 			translations.slice(i * options.batchSize, (i + 1) * options.batchSize)
 		)
 		const result: TranslationKeyValue[] = []
+		let progressPercentage = 0
 		for (const batch of batches) {
 			const batchResult = await this.processTranslations(batch)
 			if (batchResult) result.push(...batchResult)
+			progressPercentage = Math.round(
+				((batches.indexOf(batch) + 1) / batches.length) * 100
+			)
+			this.logger.log('INFO', `Translation progress: ${progressPercentage}%`)
 		}
 		return result
 	}

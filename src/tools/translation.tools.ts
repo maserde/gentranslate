@@ -110,15 +110,22 @@ const translatePatch = async (
 export const patchTranslations = async (
 	baseTranslationFilePath: string,
 	patchedTranslationFilePath: string,
-	outputFolderPath: string
+	outputFolderPath: string,
+	options: { includeLanguages: string } = {
+		includeLanguages: ''
+	}
 ) => {
+	const includeLanguages = options.includeLanguages
+		? options.includeLanguages.replaceAll(/ /g, '').split(',')
+		: []
+
 	logger.log('INFO', `Checking output folder for existing translation files`)
 	const existingFiles: TranslationFile[] =
 		getTranslationFilesFromPath(outputFolderPath)
 
 	logger.log('INFO', `Found ${existingFiles.length} existing translation files`)
 	logger.log('INFO', `Check if existing translation files are valid`)
-	const translations: TranslationJson[] =
+	let translations: TranslationJson[] =
 		await getTranslationJsonFromFiles(existingFiles)
 
 	logger.log(
@@ -126,6 +133,19 @@ export const patchTranslations = async (
 		`Existing translation files are successfully validated. Found ${translations.length} valid files and ${existingFiles.length - translations.length} invalid files. Skipping invalid files`
 	)
 	logger.log('INFO', `Loading base translation from ${baseTranslationFilePath}`)
+
+	if (includeLanguages.length > 0) {
+		logger.log(
+			'INFO',
+			`Filtering translations for languages: ${includeLanguages.join(', ')}`
+		)
+		translations = translations.filter((translation) => {
+			const language = getLanguageCodeByTranslationJson(translation)
+			return language && includeLanguages.includes(language.code)
+		})
+		logger.log('INFO', `Filtered to only ${translations.length} translations`)
+	}
+
 	const baseTranslation = await new TranslationJson(
 		new TranslationFile(baseTranslationFilePath)
 	).parse()
