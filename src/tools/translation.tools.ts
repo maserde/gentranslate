@@ -159,7 +159,7 @@ export const patchTranslations = async (
 	).parse()
 
 	logger.log('INFO', `Comparing translations`)
-	const diff = baseTranslation.diff(patchedTranslation)
+	const diff = patchedTranslation.diff(baseTranslation)
 
 	logger.log('INFO', `Found ${diff.length} differences`)
 	await translatePatch(translations, diff)
