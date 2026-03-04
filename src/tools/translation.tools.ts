@@ -111,12 +111,16 @@ export const patchTranslations = async (
 	baseTranslationFilePath: string,
 	patchedTranslationFilePath: string,
 	outputFolderPath: string,
-	options: { includeLanguages: string } = {
-		includeLanguages: ''
+	options: { includeLanguages: string; excludeKeys: string } = {
+		includeLanguages: '',
+		excludeKeys: ''
 	}
 ) => {
 	const includeLanguages = options.includeLanguages
 		? options.includeLanguages.replaceAll(/ /g, '').split(',')
+		: []
+	const excludeKeys = options.excludeKeys
+		? options.excludeKeys.replaceAll(/ /g, '').split(',')
 		: []
 
 	logger.log('INFO', `Checking output folder for existing translation files`)
@@ -162,5 +166,43 @@ export const patchTranslations = async (
 	const diff = patchedTranslation.diff(baseTranslation)
 
 	logger.log('INFO', `Found ${diff.length} differences`)
-	await translatePatch(translations, diff)
+
+	const filteredDiff =
+		excludeKeys.length > 0
+			? diff.filter((d) => !excludeKeys.includes(d.key))
+			: diff
+
+	if (excludeKeys.length > 0) {
+		logger.log(
+			'INFO',
+			`Excluded ${diff.length - filteredDiff.length} keys from translation: ${excludeKeys.join(', ')}`
+		)
+	}
+
+	await translatePatch(translations, filteredDiff)
+}
+
+export const translateJson = async (
+	pathToTranslationFile: string,
+	outputFilePath: string
+) => {
+	logger.log('INFO', `Loading base translation from ${pathToTranslationFile}`)
+	const translation = await new TranslationJson(
+		new TranslationFile(pathToTranslationFile)
+	).parse()
+	const flattened = translation.flatten()
+
+	const allEntries: TranslationKeyValue[] = Array.from(flattened.entries()).map(
+		([key, value]) => new TranslationKeyValue(key, value)
+	)
+	logger.log('INFO', `Found ${allEntries.length} translation entries`)
+
+	const languageCodes = Language.getLanguageCodes()
+	logger.log('INFO', `Generating translations for ${languageCodes.length} languages`)
+
+	const translations: TranslationJson[] = languageCodes.map((code) =>
+		new TranslationJson(new TranslationFile(`${outputFilePath}/${code}.json`))
+	)
+
+	await translatePatch(translations, allEntries)
 }
