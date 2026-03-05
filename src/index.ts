@@ -6,7 +6,7 @@ import { program } from 'commander'
 program
 	.name('reusely-translation')
 	.description('A CLI tool for Reusely translation.')
-	.version('1.0.4')
+	.version('1.0.5')
 
 program
 	.command(

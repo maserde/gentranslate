@@ -145,6 +145,14 @@ export const patchTranslations = async (
 		)
 		translations = translations.filter((translation) => {
 			const language = getLanguageCodeByTranslationJson(translation)
+			const isPatchedTranslationInsideOutput =
+				translation.source instanceof TranslationFile &&
+				translation.source.path.startsWith(outputFolderPath)
+			const isBaseTranslation = language?.code === 'en'
+			if (isBaseTranslation && isPatchedTranslationInsideOutput) {
+				logger.log('INFO', 'Base translation (en.json) will be skipped')
+				return false
+			}
 			return language && includeLanguages.includes(language.code)
 		})
 		logger.log('INFO', `Filtered to only ${translations.length} translations`)
@@ -198,10 +206,14 @@ export const translateJson = async (
 	logger.log('INFO', `Found ${allEntries.length} translation entries`)
 
 	const languageCodes = Language.getLanguageCodes()
-	logger.log('INFO', `Generating translations for ${languageCodes.length} languages`)
+	logger.log(
+		'INFO',
+		`Generating translations for ${languageCodes.length} languages`
+	)
 
-	const translations: TranslationJson[] = languageCodes.map((code) =>
-		new TranslationJson(new TranslationFile(`${outputFilePath}/${code}.json`))
+	const translations: TranslationJson[] = languageCodes.map(
+		(code) =>
+			new TranslationJson(new TranslationFile(`${outputFilePath}/${code}.json`))
 	)
 
 	await translatePatch(translations, allEntries)
