@@ -20,6 +20,10 @@ program
 		'-e, --exclude-keys <keys>',
 		'comma-separated list of keys to exclude from translation'
 	)
+	.option(
+		'-k, --keep-words <words>',
+		'comma-separated list of words to keep in translation'
+	)
 	.action(patchTranslations)
 
 program

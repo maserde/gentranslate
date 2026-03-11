@@ -32,6 +32,7 @@ Domain context:
 - Use standard/formal register appropriate for business software
 
 Translation rules:
+0. IMPORTANT: KEEP THESE EXACT WORDING UNTRANSLATED: {:keepWords}
 1. PRESERVE placeholders exactly as-is: {value}, {type}, {0}, {1}, etc. — do not translate content inside curly braces
 2. TRANSLATE all descriptive English terms including offer types, conditions, and UI labels
 3. Only keep in English: proper brand names (Apple, Samsung), integration brand names (BackMarket, ShareASale, Tremendous, DataFeed), model numbers (iPhone 15), and code identifiers
@@ -58,7 +59,13 @@ Input:\n`
 	private llmClient: OpenRouter
 	private logger: Logger = new Logger()
 
-	constructor(public readonly language: { code: string; name: string }) {
+	constructor(
+		public readonly language: {
+			code: string
+			name: string
+		},
+		public readonly keepWords: string[] = []
+	) {
 		this.llmClient = new OpenRouter({
 			apiKey: process.env.OPENROUTER_API_KEY
 		})
@@ -111,10 +118,12 @@ Input:\n`
 
 	private generateSystemPrompt(languageName: string): string {
 		const isXhosa = languageName.toLowerCase() === 'xhosa'
-		return this.LLM_SYSTEM_PROMPT.replace(
+		const formattedPrompt = this.LLM_SYSTEM_PROMPT.replace(
 			'{:language}',
 			isXhosa ? 'English' : languageName
-		)
+		).replace('{:keepWords}', this.keepWords.map((w) => `"${w}"`).join(', '))
+		console.log(formattedPrompt)
+		return formattedPrompt
 	}
 
 	private generateUserPrompt(input: string): string {

@@ -46,9 +46,12 @@ const getLanguageCodeByTranslationJson = (translation: TranslationJson) => {
 const translatePatch = async (
 	translations: TranslationJson[],
 	diff: TranslationKeyValue[],
-	options: { batchSize: number } = { batchSize: 10 }
+	options: { batchSize?: number; keepWords?: string[] } = {
+		batchSize: 10,
+		keepWords: []
+	}
 ) => {
-	const { batchSize = 10 } = options
+	const { batchSize = 10, keepWords = [] } = options
 	const translationDiffKeys = diff.map((d) => d.key).join(', ')
 	let queue: Promise<any>[] = []
 	let completed = 0
@@ -88,7 +91,10 @@ const translatePatch = async (
 
 		queue.push(
 			new SafeAsync(async (): Promise<void> => {
-				const translates = await new LLMTranslation(language).translate(diff)
+				const translates = await new LLMTranslation(
+					language,
+					keepWords
+				).translate(diff)
 
 				if (translates) {
 					for (const translated of translates) {
@@ -111,9 +117,14 @@ export const patchTranslations = async (
 	baseTranslationFilePath: string,
 	patchedTranslationFilePath: string,
 	outputFolderPath: string,
-	options: { includeLanguages: string; excludeKeys: string } = {
+	options: {
+		includeLanguages: string
+		excludeKeys: string
+		keepWords: string
+	} = {
 		includeLanguages: '',
-		excludeKeys: ''
+		excludeKeys: '',
+		keepWords: ''
 	}
 ) => {
 	const includeLanguages = options.includeLanguages
@@ -122,6 +133,7 @@ export const patchTranslations = async (
 	const excludeKeys = options.excludeKeys
 		? options.excludeKeys.replaceAll(/ /g, '').split(',')
 		: []
+	const keepWords = options.keepWords ? options.keepWords.split(',') : []
 
 	logger.log('INFO', `Checking output folder for existing translation files`)
 	const existingFiles: TranslationFile[] =
@@ -187,7 +199,7 @@ export const patchTranslations = async (
 		)
 	}
 
-	await translatePatch(translations, filteredDiff)
+	await translatePatch(translations, filteredDiff, { keepWords })
 }
 
 export const translateJson = async (
