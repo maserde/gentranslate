@@ -109,7 +109,13 @@ Input:\n`
 		if (typeof content !== 'string') {
 			throw new Error('Unexpected response format from LLM')
 		}
-		return JSON.parse(content)
+		try {
+			return JSON.parse(content)
+		} catch (e) {
+			throw new Error(
+				`Failed to parse LLM response as JSON: ${e instanceof Error ? e.message : e}. Preview: ${content.slice(0, 200)}`
+			)
+		}
 	}
 
 	private generateTranslationFormattedInput(

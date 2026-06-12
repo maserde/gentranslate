@@ -6,10 +6,12 @@ export class SafeAsync<T> {
 
 	constructor(
 		private readonly fn: () => Promise<T>,
-		private readonly retries = 3
+		private readonly retries = 3,
+		private readonly label = ''
 	) {}
 
 	async run(): Promise<{ result: T | null; errors: Error[] }> {
+		const name = this.label || this.fn.name || '<anonymous>'
 		for (let i = 0; i < this.retries; i++) {
 			try {
 				return { result: await this.fn(), errors: [] }
@@ -18,13 +20,13 @@ export class SafeAsync<T> {
 				if (i === this.retries - 1) {
 					this.logger.log(
 						'ERROR',
-						`Max retries reached for ${this.fn.name}: ${error}`
+						`Max retries reached for ${name}: ${error}`
 					)
 					break
 				}
 				this.logger.log(
 					'WARN',
-					`Retry ${i + 1} for ${this.fn.name} failed: ${error}`
+					`Retry ${i + 1} for ${name} failed: ${error}`
 				)
 				await new Promise((resolve) =>
 					setTimeout(resolve, Math.pow(2, i) * 1000)

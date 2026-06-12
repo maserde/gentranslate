@@ -90,26 +90,36 @@ const translatePatch = async (
 		}
 
 		queue.push(
-			new SafeAsync(async (): Promise<void> => {
-				const translates = await new LLMTranslation(
-					language,
-					keepWords
-				).translate(diff)
+			new SafeAsync(
+				async (): Promise<void> => {
+					const translates = await new LLMTranslation(
+						language,
+						keepWords
+					).translate(diff)
 
-				if (translates) {
-					for (const translated of translates) {
-						translation.setValue(translated.key, translated.value)
+					if (translates) {
+						for (const translated of translates) {
+							translation.setValue(translated.key, translated.value)
+						}
 					}
-				}
 
-				logger.log(
-					'INFO',
-					`Finished translating ${translationPath} for ${language.name}`
-				)
-				logger.log('INFO', `Writing ${translationPath}`)
-				translation.write()
-			}).run()
+					logger.log(
+						'INFO',
+						`Finished translating ${translationPath} for ${language.name}`
+					)
+					logger.log('INFO', `Writing ${translationPath}`)
+					translation.write()
+				},
+				3,
+				`translate:${translationPath}`
+			).run()
 		)
+	}
+
+	if (queue.length > 0) {
+		completed += queue.length
+		logger.log('INFO', `Waiting for last ${queue.length} tasks to complete`)
+		await Promise.all(queue)
 	}
 }
 
