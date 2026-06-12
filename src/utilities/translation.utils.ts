@@ -31,8 +31,12 @@ Domain context:
 - Offer types describe HOW items are traded in (in-store, by mail, etc.)
 - Use standard/formal register appropriate for business software
 
+IMPORTANT RULES:
+- Do NOT translate the following terms — keep them exactly as-is in the output: [{:keepWords}].
+  Example: If {:keepWords} contains "Market Access" and the input is "Market Access Supports",
+  the correct Indonesian translation is "Bantuan Market Access" (not "Market Access Supports" or "Bantuan Akses Pasar").
+
 Translation rules:
-0. IMPORTANT: KEEP THESE EXACT WORDING UNTRANSLATED: {:keepWords}
 1. PRESERVE placeholders exactly as-is: {value}, {type}, {0}, {1}, etc. — do not translate content inside curly braces
 2. TRANSLATE all descriptive English terms including offer types, conditions, and UI labels
 3. Only keep in English: proper brand names (Apple, Samsung), integration brand names (BackMarket, ShareASale, Tremendous, DataFeed), model numbers (iPhone 15), and code identifiers
@@ -41,7 +45,7 @@ Translation rules:
 Domain glossary (MUST be translated, not kept in English):
 - "In-Store" → physical store location (e.g., Indonesian: "di toko")
 - "Mail-in" → send by postal mail (e.g., Indonesian: "kirim pos")  
-- "Bulk Quote" → wholesale/volume pricing (e.g., Indonesian: "penawaran grosir")
+- "Bulk Quote"/"Batch Quote" → wholesale/volume pricing (e.g., Indonesian: "Penawaran Grup")
 - "Easy Offer" → simple/quick offer (e.g., Indonesian: "penawaran mudah")
 - "Trade-in" → exchange old item for value (translate to local equivalent)
 - "Offer" → proposal/bid (translate appropriately)
@@ -82,7 +86,7 @@ Input:\n`
 		)
 		const response = await this.llmClient.chat.send({
 			chatGenerationParams: {
-				model: 'google/gemini-2.0-flash-001',
+				model: 'google/gemini-2.5-flash-lite',
 				messages: [{ role: 'user', content: `${systemPrompt}\n${userPrompt}` }],
 				stream: false,
 				responseFormat: {
@@ -122,7 +126,6 @@ Input:\n`
 			'{:language}',
 			isXhosa ? 'English' : languageName
 		).replace('{:keepWords}', this.keepWords.map((w) => `"${w}"`).join(', '))
-		console.log(formattedPrompt)
 		return formattedPrompt
 	}
 

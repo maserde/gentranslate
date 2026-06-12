@@ -119,16 +119,21 @@ export const patchTranslations = async (
 	outputFolderPath: string,
 	options: {
 		includeLanguages: string
+		includeKeys: string
 		excludeKeys: string
 		keepWords: string
 	} = {
 		includeLanguages: '',
+		includeKeys: '',
 		excludeKeys: '',
 		keepWords: ''
 	}
 ) => {
 	const includeLanguages = options.includeLanguages
 		? options.includeLanguages.replaceAll(/ /g, '').split(',')
+		: []
+	const includeKeys = options.includeKeys
+		? options.includeKeys.replaceAll(/ /g, '').split(',')
 		: []
 	const excludeKeys = options.excludeKeys
 		? options.excludeKeys.replaceAll(/ /g, '').split(',')
@@ -187,10 +192,22 @@ export const patchTranslations = async (
 
 	logger.log('INFO', `Found ${diff.length} differences`)
 
-	const filteredDiff =
-		excludeKeys.length > 0
-			? diff.filter((d) => !excludeKeys.includes(d.key))
+	let filteredDiff =
+		includeKeys.length > 0
+			? diff.filter((d) => includeKeys.includes(d.key))
 			: diff
+
+	if (includeKeys.length > 0) {
+		logger.log(
+			'INFO',
+			`Included only ${filteredDiff.length} keys in translation: ${includeKeys.join(', ')}`
+		)
+	}
+
+	filteredDiff =
+		excludeKeys.length > 0
+			? filteredDiff.filter((d) => !excludeKeys.includes(d.key))
+			: filteredDiff
 
 	if (excludeKeys.length > 0) {
 		logger.log(

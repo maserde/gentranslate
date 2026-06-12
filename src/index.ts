@@ -6,7 +6,7 @@ import { program } from 'commander'
 program
 	.name('reusely-translation')
 	.description('A CLI tool for Reusely translation.')
-	.version('1.0.5')
+	.version('1.1.3')
 
 program
 	.command(
@@ -15,6 +15,10 @@ program
 	.option(
 		'-i, --include-languages <languages>',
 		'comma-separated list of languages to include in translation'
+	)
+	.option(
+		'--include-keys <keys>',
+		'comma-separated list of keys to include in translation'
 	)
 	.option(
 		'-e, --exclude-keys <keys>',
